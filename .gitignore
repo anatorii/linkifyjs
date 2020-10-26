@@ -41,7 +41,7 @@ node_modules
 build
 !test/qunit/build
 dist
-lib
+#lib
 vendor
 
 # IntelliJ
