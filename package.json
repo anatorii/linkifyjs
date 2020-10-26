@@ -1,10 +1,10 @@
 {
-  "name": "linkifyjs",
-  "version": "2.1.9",
+  "name": "@anatorii/linkifyjs",
+  "version": "2.1.9-cyr",
   "description": "Intelligent link recognition, made easy",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SoapBox/linkifyjs.git"
+    "url": "git+https://github.com/anatorii/linkifyjs.git"
   },
   "main": "index.js",
   "scripts": {
