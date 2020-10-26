@@ -11,6 +11,7 @@ import {CharacterState as State, stateify} from './state';
 import * as TOKENS from './tokens/text';
 import {
 	DOMAIN,
+	CYRILLIC,
 	LOCALHOST,
 	NUM,
 	PROTOCOL,
@@ -42,7 +43,8 @@ import {
 const tlds = __TLDS__; // macro, see gulpfile.js
 
 const NUMBERS = '0123456789'.split('');
-const ALPHANUM = '0123456789abcdefghijklmnopqrstuvwxyz'.split('');
+const CYRILLIC_LETTERS = 'абвгдеёжзийклмнопрстуфхцчшщьыъэюя'.split('');
+const ALPHANUM = '0123456789abcdefghijklmnopqrstuvwxyzабвгдеёжзийклмнопрстуфхцчшщьыъэюя'.split('');
 const WHITESPACE = [' ', '\f', '\r', '\t', '\v', '\u00a0', '\u1680', '\u180e']; // excluding line breaks
 
 let domainStates = []; // states that jump to DOMAIN on /[a-z0-9]/
@@ -51,6 +53,7 @@ let makeState = (tokenClass) => new State(tokenClass);
 // Frequently used states
 const S_START			= makeState();
 const S_NUM				= makeState(NUM);
+const S_CYRILLIC		= makeState(CYRILLIC);
 const S_DOMAIN			= makeState(DOMAIN);
 const S_DOMAIN_HYPHEN	= makeState(); // domain followed by 1 or more hyphen characters
 const S_WS				= makeState(WS);
@@ -137,10 +140,18 @@ domainStates.push.apply(domainStates, partialLocalhostStates);
 // DOMAINs make more DOMAINs
 // Number and character transitions
 S_START.on(NUMBERS, S_NUM);
+S_START.on(CYRILLIC_LETTERS, S_CYRILLIC);
 S_NUM
 .on('-', S_DOMAIN_HYPHEN)
 .on(NUMBERS, S_NUM)
-.on(ALPHANUM, S_DOMAIN); // number becomes DOMAIN
+.on(ALPHANUM, S_DOMAIN)
+.on(CYRILLIC_LETTERS, S_CYRILLIC); // number becomes DOMAIN
+
+S_CYRILLIC
+.on('-', S_DOMAIN_HYPHEN)
+.on(NUMBERS, S_NUM)
+.on(ALPHANUM, S_DOMAIN)
+.on(CYRILLIC_LETTERS, S_CYRILLIC);
 
 S_DOMAIN
 .on('-', S_DOMAIN_HYPHEN)
@@ -161,6 +172,12 @@ S_DOMAIN_HYPHEN
 // Set default transition
 S_START.defaultTransition = makeState(SYM);
 
+let CyrToLower = function(string){
+	var letters = { "А":"а","Б":"б","В":"в","Г":"г","Д":"д","Е":"е","Ё":"ё","Ж":"ж","З":"з","И":"и","Й":"й","К":"к","Л":"л","М":"м","Н":"н","О":"о","П":"п","Р":"р","С":"с","Т":"т","У":"у","Ф":"ф","Х":"х","Ц":"ц","Ч":"ч","Ш":"ш","Щ":"щ","Ь":"ь","Ы":"ы","Ъ":"ъ","Э":"э","Ю":"ю","Я":"я" };
+	string = string.replace(/(([АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]))/g, function(letter){ return letters[letter]; });
+	return string.toLowerCase();
+};
+
 /**
 	Given a string, returns an array of TOKEN instances representing the
 	composition of that string.
@@ -175,7 +192,7 @@ let run = function (str) {
 	// This selective `toLowerCase` is used because lowercasing the entire
 	// string causes the length and character position to vary in some in some
 	// non-English strings. This happens only on V8-based runtimes.
-	let lowerStr = str.replace(/[A-Z]/g, (c) => c.toLowerCase());
+	let lowerStr = str.replace(/[A-ZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]/g, (c) => CyrToLower(c));
 	let len = str.length;
 	let tokens = []; // return value
 

@@ -34,6 +34,11 @@ function inheritsToken(value) {
 const DOMAIN = inheritsToken();
 
 /**
+ cyrillic
+ */
+const CYRILLIC = inheritsToken();
+
+/**
 	@class AT
 	@extends TextToken
 */
@@ -171,6 +176,7 @@ const AMPERSAND = inheritsToken('&');
 
 export {
 	TextToken as Base,
+	CYRILLIC,
 	DOMAIN,
 	AT,
 	COLON,
